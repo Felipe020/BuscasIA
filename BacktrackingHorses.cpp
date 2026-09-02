@@ -1,98 +1,171 @@
 #include <iostream>
 #include <vector>
-#include <stack>
 #include <set>
 #include <algorithm>
 using namespace std;
 
-void imprimeTabuleiro(const vector<char>& t) {
+void imprimeTabuleiro(const vector<char> &t)
+{
     cout << t[0] << " " << t[1] << " " << t[2] << "\n";
     cout << t[3] << " " << t[4] << " " << t[5] << "\n";
     cout << t[6] << " " << t[7] << " " << t[8] << "\n";
     cout << "------\n";
 }
 
-void busca()
+// Função de Backtracking
+void backtracking(
+    const vector<char> &tabuleiroAtual,
+    const vector<char> &tabuleiroFinal,
+    const vector<vector<int>> &adj,
+    vector<vector<char>> &caminhoAtual,
+    vector<vector<char>> &melhorCaminho,
+    set<vector<char>> &visitados)
 {
-    vector<char> tabuleiroInicio = {'B', 'V', 'B', 'V', 'V', 'V', 'P', 'V', 'P'}; // Estado inicial
-    vector<char> tabuleiroFinal = {'P', 'V', 'P', 'V', 'V', 'V', 'B', 'V', 'B'};  // Estado final
-    vector<char> tabuleiroAtual;
+    // Se chegou ao estado final
+    if (tabuleiroAtual == tabuleiroFinal)
+    {
 
-    bool sucesso = false;
-    bool fracasso = false;
+        // Verifica se é a primeira solução
+        // ou se encontrou uma solução melhor
+        if (melhorCaminho.empty() ||
+            caminhoAtual.size() < melhorCaminho.size())
+        {
 
-    stack<vector<char>> caminho;
-    set<vector<char>> visitados;
-
-    // Mapeamento dos movimentos válidos
-    vector<vector<int>> adj = {
-        {5, 7}, {6, 8}, {3, 7}, {2, 8}, {}, {0, 6}, {1, 5}, {0, 2}, {1, 3}};
-
-    caminho.push(tabuleiroInicio);
-    visitados.insert(tabuleiroInicio);
-
-   while(!sucesso && !fracasso){
-        if(caminho.empty()){
-            fracasso = true;
-            break;
+            melhorCaminho = caminhoAtual;
         }
 
-        vector<char> tabuleiroAtual = caminho.top();
+        return;
+    }
 
-        if(tabuleiroAtual == tabuleiroFinal){
-            sucesso = true;
-            break;
-        }
-        
-        bool encontrouNovoEstado = false;
+    // Se o caminho atual já é maior ou igual à melhor solução,
+    // não há motivo para continuar explorando
+    if (!melhorCaminho.empty() &&
+        caminhoAtual.size() >= melhorCaminho.size())
+    {
+        return;
+    }
 
-        for(int i = 0; i < 9; ++i){
-            if(tabuleiroAtual[i] != 'V'){ 
-                for(int vizinho : adj[i]){ 
-                    if(tabuleiroAtual[vizinho] == 'V'){ 
-                        
-                        vector<char> novoEstado = tabuleiroAtual;
-                        swap(novoEstado[i], novoEstado[vizinho]); // Faz o movimento
-                        
-                        if(visitados.find(novoEstado) == visitados.end()){
-                            caminho.push(novoEstado); 
-                            visitados.insert(novoEstado);
-                            encontrouNovoEstado = true;
-                            break;
-                        }
+    // Percorre todas as casas do tabuleiro
+    for (int i = 0; i < 9; ++i)
+    {
+
+        // Se existe um cavalo nessa posição
+        if (tabuleiroAtual[i] != 'V')
+        {
+            // Percorre os movimentos possíveis do cavalo
+            for (int vizinho : adj[i])
+            {
+                // O movimento só pode ser feito para uma casa vazia
+                if (tabuleiroAtual[vizinho] == 'V')
+                {
+                    // Cria o novo estado
+                    vector<char> novoEstado = tabuleiroAtual;
+
+                    // Faz o movimento do cavalo
+                    swap(novoEstado[i], novoEstado[vizinho]);
+
+                    // Verifica se o estado ainda não está no caminho atual
+                    if (visitados.find(novoEstado) == visitados.end())
+                    {
+                        // Marca o estado como visitado
+                        visitados.insert(novoEstado);
+
+                        // Adiciona o estado ao caminho atual
+                        caminhoAtual.push_back(novoEstado);
+
+                        // Continua a busca
+                        backtracking(
+                            novoEstado,
+                            tabuleiroFinal,
+                            adj,
+                            caminhoAtual,
+                            melhorCaminho,
+                            visitados);
+
+                        // remove o estado do caminho
+                        caminhoAtual.pop_back();
+
+                        // Desmarca o estado para permitir
+                        // que outro caminho possa utilizá-lo
+                        visitados.erase(novoEstado);
                     }
                 }
             }
-            if(encontrouNovoEstado) break;
-        }
-        
-        // Se não houver movimentos válidos e não visitados a partir deste estado
-        if(!encontrouNovoEstado){
-            caminho.pop(); // Backtracking: Remove o nó atual e volta para N := pai(N)
         }
     }
+}
 
-   if(sucesso){
+void busca()
+{
+    // Estado inicial
+    vector<char> tabuleiroInicio = {
+        'B', 'V', 'B',
+        'V', 'V', 'V',
+        'P', 'V', 'P'};
+
+    // Estado final
+    vector<char> tabuleiroFinal = {
+        'P', 'V', 'P',
+        'V', 'V', 'V',
+        'B', 'V', 'B'};
+
+    
+    vector<vector<int>> adj = {
+        {5, 7}, 
+        {6, 8}, 
+        {3, 7}, 
+        {2, 8}, 
+        {},     
+        {0, 6}, 
+        {1, 5}, 
+        {0, 2}, 
+        {1, 3}  
+    };
+
+    // Caminho que está sendo explorado
+    vector<vector<char>> caminhoAtual;
+
+    // Melhor caminho encontrado
+    vector<vector<char>> melhorCaminho;
+
+    // Estados visitados no caminho atual
+    set<vector<char>> visitados;
+
+    // Estado inicial entra no caminho
+    caminhoAtual.push_back(tabuleiroInicio);
+
+    // Marca o estado inicial
+    visitados.insert(tabuleiroInicio);
+
+    // Inicia o Backtracking
+    backtracking(
+        tabuleiroInicio,
+        tabuleiroFinal,
+        adj,
+        caminhoAtual,
+        melhorCaminho,
+        visitados);
+
+    if (!melhorCaminho.empty())
+    {
+
         cout << "Solucao encontrada usando Backtracking!\n";
-        cout << "Quantidade de passos: " << caminho.size() - 1 << "\n\n";
 
-        // Extrai a sequência da pilha (sai do fim para o início)
-        vector<vector<char>> sequenciaFinal;
-        while(!caminho.empty()){
-            sequenciaFinal.push_back(caminho.top());
-            caminho.pop();
-        }
-        
-        // Inverte para imprimir na ordem cronológica
-        reverse(sequenciaFinal.begin(), sequenciaFinal.end());
+        cout << "Quantidade de passos: "
+             << melhorCaminho.size() - 1
+             << "\n\n";
 
-        // Imprime cada passo
-        for(size_t i = 0; i < sequenciaFinal.size(); ++i){
+        // Mostra todos os estados da solução
+        for (size_t i = 0; i < melhorCaminho.size(); ++i)
+        {
+
             cout << "Passo " << i << ":\n";
-            imprimeTabuleiro(sequenciaFinal[i]);
+
+            imprimeTabuleiro(melhorCaminho[i]);
         }
-        
-    } else {
+    }
+    else
+    {
         cout << "Nenhuma solucao possivel." << endl;
     }
 }
@@ -102,4 +175,3 @@ int main()
     busca();
     return 0;
 }
-
