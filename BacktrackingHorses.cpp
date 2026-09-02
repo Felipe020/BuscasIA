@@ -24,11 +24,6 @@ void backtracking(
         return;
     }
 
-    // Poda 2: Limite de segurança (sabemos que a solução ronda os 16 passos)
-    if (caminhoAtual.size() > 20) {
-        return;
-    }
-
     // Sucesso: Chegou ao estado final
     if (tabuleiroAtual == tabuleiroFinal) {
         melhorCaminho = caminhoAtual;
